@@ -1,0 +1,61 @@
+# === Project ===
+APP      := waydemo
+SRC      := waydemo.c
+BUILD    := build
+BIN      := $(BUILD)/$(APP)
+
+# === Compiler ===
+CC       ?= cc
+
+# === Paths ===
+RUNARA_DIR := deps/runara
+RUNARA_INC := $(RUNARA_DIR)/include
+
+# === pkg-config deps ===
+PKG_DEPS := \
+    wayland-client \
+    wayland-egl \
+    libdecor-0 \
+    egl \
+    glesv2 \
+    freetype2 \
+    harfbuzz \
+    cglm
+
+# === Flags ===
+CFLAGS  += -std=c11 -O3 -Wall -Wextra \
+    -I$(RUNARA_INC)
+
+LDFLAGS += \
+    -L$(RUNARA_DIR)/build \
+    -lrunara \
+    -pthread
+
+CFLAGS  += $(shell pkg-config --cflags $(PKG_DEPS))
+LDFLAGS += $(shell pkg-config --libs $(PKG_DEPS))
+
+# === Targets ===
+
+all: $(BIN)
+
+$(BUILD):
+    mkdir -p $(BUILD)
+
+# --- build runara FIRST ---
+runara:
+    @echo "==> Building runara"
+    meson setup $(RUNARA_DIR)/build $(RUNARA_DIR) --wipe >/dev/null || true
+    ninja -C $(RUNARA_DIR)/build
+
+# --- build waydemo ---
+$(BIN): $(BUILD) runara
+    $(CC) $(SRC) -o $(BIN) $(CFLAGS) $(LDFLAGS)
+
+run: $(BIN)
+    ./$(BIN)
+
+clean:
+    rm -rf $(BUILD)
+    rm -rf $(RUNARA_DIR)/build
+
+.PHONY: all run clean runara
