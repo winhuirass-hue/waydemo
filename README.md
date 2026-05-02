@@ -1,4 +1,4 @@
-# waydemo# waydemo
+# waydemo
 
 **waydemo** is a minimal **Wayland‑native demo application** showcasing how to combine:
 
